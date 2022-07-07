@@ -83,48 +83,61 @@ const generateMessage = (track: Record<string, any>, linkArtists: boolean = fals
 let loggedFailure = false
 
 /// generating every 10 seconds
-cron.schedule('*/10 * * * * *', async () => {
-  const yaml = await load()
+// cron.schedule('*/10 * * * * *', async () => {
+//   const yaml = await load()
 
-  const { channels } = yaml
+//   const { channels } = yaml
 
-  if (channels === null) {
-    if (!loggedFailure) {
-      Logger.create('yaml is lacking of data!')(yaml)
+//   if (channels === null) {
+//     if (!loggedFailure) {
+//       Logger.create('yaml is lacking of data!')(yaml)
 
-      loggedFailure = true
-    }
+//       loggedFailure = true
+//     }
 
-    return
-  }
+//     return
+//   }
 
-  const [data, recent] = await Promise.all([
-    spotify.call('me/player/currently-playing'),
-    spotify.call('me/player/recently-played')
-  ])
+//   const [data, recent] = await Promise.all([
+//     spotify.call('me/player/currently-playing'),
+//     spotify.call('me/player/recently-played')
+//   ])
 
-  const buffer = await render(data, recent!)
+//   const buffer = await render(data, recent!)
 
-  const track = data === null ? recent!.items[0].track : data.item
+//   const track = data === null ? recent!.items[0].track : data.item
 
-  const message = generateMessage(track, true)
-  const keyboard = getKeyboard(track)
+//   const message = generateMessage(track, true)
+//   const keyboard = getKeyboard(track)
 
-  for (const channel of channels) {
-    await telegram.api.editMessageMedia({
-      chat_id: channel.id,
-      message_id: channel.message_id,
+//   for (const channel of channels) {
+//     await telegram.api.editMessageMedia({
+//       chat_id: channel.id,
+//       message_id: channel.message_id,
   
-      media: {
-        // @ts-ignore
-        media: buffer,
-        type: 'photo',
-        caption: message,
-        parse_mode: 'markdown'
-      },
+//       media: {
+//         // @ts-ignore
+//         media: buffer,
+//         type: 'photo',
+//         caption: message,
+//         parse_mode: 'markdown'
+//       },
   
-      reply_markup: keyboard,
-    })
+//       reply_markup: keyboard,
+//     })
+//   }
+// })
+
+telegram.updates.on('message', async (context) => {
+  if (context.text === '/gen') {
+    const [data, recent] = await Promise.all([
+      spotify.call('me/player/currently-playing'),
+      spotify.call('me/player/recently-played')
+    ])
+
+    const buffer = await render(data, recent!)
+
+    return context.sendPhoto(buffer)
   }
 })
 
