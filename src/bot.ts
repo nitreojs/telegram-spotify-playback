@@ -42,7 +42,7 @@ const deferAlbumTypeName = (album: Record<string, any>) => (
 const getKeyboard = (track: Record<string, any>) => {
   const buttons = [
     InlineKeyboard.urlButton({
-      text: `${track.name}, song.link`,
+      text: `${transformArtists(track.artists)} — ${track.name}`,
       url: `https://odesli.com/${track.external_urls.spotify}`
     })
   ]
