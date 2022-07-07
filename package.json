@@ -1,0 +1,31 @@
+{
+  "name": "spotify-bot",
+  "version": "0.0.0",
+  "description": "Spotify Telegram bot",
+  "main": "dist/bot",
+  "scripts": {
+    "start:bot": "ts-node src/bot",
+    "start:server": "ts-node src/server",
+    "build": "tsc -p tsconfig.json"
+  },
+  "author": "starkow",
+  "license": "WTFPL",
+  "dependencies": {
+    "common-tags": "^1.8.2",
+    "dotenv": "^14.2.0",
+    "express": "^4.17.2",
+    "node-cron": "^3.0.0",
+    "node-fetch": "2.6.6",
+    "puregram": "^2.3.2",
+    "skia-canvas": "^0.9.30",
+    "yaml": "^1.10.2"
+  },
+  "devDependencies": {
+    "@types/common-tags": "^1.8.1",
+    "@types/express": "^4.17.13",
+    "@types/node": "^17.0.10",
+    "@types/node-cron": "^3.0.1",
+    "@types/node-fetch": "^2.5.12",
+    "typescript": "^4.7.4"
+  }
+}
