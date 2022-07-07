@@ -13,7 +13,9 @@ const spotify = new Spotify({
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET!
 })
 
-FontLibrary.use('SF UI', [path.resolve(__dirname, '..', 'fonts', 'SF UI', '*.otf')])
+const fonts = FontLibrary.use('SF UI', [path.resolve(__dirname, '..', 'fonts', 'SF UI', '*.otf')])
+
+console.log(fonts)
 
 export const transformTime = (ms: number) => {
   let seconds = Math.round(ms / 1000)
