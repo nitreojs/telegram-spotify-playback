@@ -15,7 +15,10 @@ import { Spotify } from './spotify'
 import { Color, Logger, TextStyle } from './logger'
 import { YamlData } from './types'
 
-const telegram = Telegram.fromToken(process.env.TELEGRAM_BOT_TOKEN!)
+const TOKEN = process.env.TELEGRAM_BOT_TOKEN as string
+const IDS = (process.env.TELEGRAM_CHANNEL_IDS as string).split(',').map(Number)
+
+const telegram = Telegram.fromToken(TOKEN)
 
 const spotify = new Spotify({
   accessToken: process.env.SPOTIFY_ACCESS_TOKEN!,
@@ -83,9 +86,9 @@ let loggedFailure = false
 cron.schedule('*/10 * * * * *', async () => {
   const yaml = await load()
 
-  const { message_id, chat_id } = yaml
+  const { channels } = yaml
 
-  if (message_id === null || chat_id === null) {
+  if (channels === null) {
     if (!loggedFailure) {
       Logger.create('yaml is lacking of data!')(yaml)
 
@@ -95,8 +98,10 @@ cron.schedule('*/10 * * * * *', async () => {
     return
   }
 
-  const data = await spotify.call('me/player/currently-playing')
-  const recent = await spotify.call('me/player/recently-played')
+  const [data, recent] = await Promise.all([
+    spotify.call('me/player/currently-playing'),
+    spotify.call('me/player/recently-played')
+  ])
 
   const buffer = await render(data, recent!)
 
@@ -105,24 +110,26 @@ cron.schedule('*/10 * * * * *', async () => {
   const message = generateMessage(track, true)
   const keyboard = getKeyboard(track)
 
-  await telegram.api.editMessageMedia({
-    chat_id,
-    message_id,
-
-    media: {
-      // @ts-ignore
-      media: buffer,
-      type: 'photo',
-      caption: message,
-      parse_mode: 'markdown'
-    },
-
-    reply_markup: keyboard,
-  })
+  for (const channel of channels) {
+    await telegram.api.editMessageMedia({
+      chat_id: channel.id,
+      message_id: channel.message_id,
+  
+      media: {
+        // @ts-ignore
+        media: buffer,
+        type: 'photo',
+        caption: message,
+        parse_mode: 'markdown'
+      },
+  
+      reply_markup: keyboard,
+    })
+  }
 })
 
 telegram.updates.on('channel_post', async (context) => {
-  if (context.chatId !== +process.env.TELEGRAM_CHANNEL_ID!) {
+  if (!IDS.includes(context.chatId as number)) {
     return
   }
 
@@ -153,9 +160,14 @@ telegram.updates.on('channel_post', async (context) => {
 
     const sentMessage = await context.sendPhoto(buffer, params)
 
-    await write({
-      message_id: sentMessage.id, chat_id: sentMessage.chatId!
+    const { channels } = await load()
+
+    channels.push({
+      id: sentMessage.chatId as number,
+      message_id: sentMessage.id
     })
+
+    await write({ channels })
   }
 })
 

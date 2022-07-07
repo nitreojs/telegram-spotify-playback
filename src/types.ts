@@ -1,4 +1,8 @@
-export interface YamlData {
+export interface YamlDataChannel {
+  id: number
   message_id: number
-  chat_id: number | string
+}
+
+export interface YamlData {
+  channels: YamlDataChannel[]
 }
