@@ -1,9 +1,6 @@
 version: '3.3'
 services:
   spotify-bot:
-    image: node:lts-alpine
-    working_dir: /spotify-bot
-    container_name: spotify-bot
     build: ./
     env_file:
       - .env
