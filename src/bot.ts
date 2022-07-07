@@ -42,19 +42,10 @@ const deferAlbumTypeName = (album: Record<string, any>) => (
 const getKeyboard = (track: Record<string, any>) => {
   const buttons = [
     InlineKeyboard.urlButton({
-      text: `🎵 ${track.name}`,
-      url: track.external_urls.spotify
+      text: `${track.name}, song.link`,
+      url: `https://odesli.com/${track.external_urls.spotify}`
     })
   ]
-
-  if (!isSingle(track.album)) {
-    buttons.push(
-      InlineKeyboard.urlButton({
-        text: `📀 ${track.album.name}`,
-        url: track.album.external_urls.spotify
-      })
-    )
-  }
 
   return InlineKeyboard.keyboard(buttons)
 }
