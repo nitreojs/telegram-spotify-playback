@@ -128,19 +128,6 @@ cron.schedule('*/10 * * * * *', async () => {
   }
 })
 
-telegram.updates.on('message', async (context) => {
-  if (context.text === '/gen') {
-    const [data, recent] = await Promise.all([
-      spotify.call('me/player/currently-playing'),
-      spotify.call('me/player/recently-played')
-    ])
-
-    const buffer = await render(data, recent!)
-
-    return context.sendPhoto(buffer)
-  }
-})
-
 telegram.updates.on('channel_post', async (context) => {
   if (!IDS.includes(context.chatId as number)) {
     return
