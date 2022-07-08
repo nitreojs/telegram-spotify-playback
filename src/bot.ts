@@ -50,7 +50,7 @@ const getDeclination = (n: number, forms: [string, string, string]) => {
     return forms[0]
   }
 
-  if (rule === 'two') {
+  if (rule === 'few') {
     return forms[1]
   }
 
