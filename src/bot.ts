@@ -190,8 +190,15 @@ cron.schedule('*/10 * * * * *', async () => {
     params.scrobbled = +scrobblesData.track.userplaycount
   }
 
+  console.log(1)
+
   const message = generateMessage(params)
+
+  console.log(2)
+
   const keyboard = getKeyboard(track)
+
+  console.log(3)
 
   console.log(message, keyboard)
 
