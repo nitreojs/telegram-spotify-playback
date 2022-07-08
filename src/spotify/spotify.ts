@@ -1,4 +1,4 @@
-import fetch, { RequestInit } from 'node-fetch'
+import { fetch, RequestInit } from 'undici'
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
@@ -66,7 +66,7 @@ export class Spotify {
     const response = await fetch(url, requestParams)
 
     try {
-      const json = await response.json()
+      const json = await response.json() as Record<string, any>
 
       if (json.error?.status === 401) { // need to revoke the token
         await this.revoke()

@@ -4,6 +4,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import { InlineKeyboard, Telegram } from 'puregram'
+import { TelegramInlineQueryResult } from 'puregram/lib/telegram-interfaces'
 
 import * as YAML from 'yaml'
 import cron from 'node-cron'
@@ -11,9 +12,17 @@ import cron from 'node-cron'
 import { isEP, isSingle, render } from './renderer'
 
 import { Spotify } from './spotify'
+import { Lastfm } from './lastfm'
+
 import { Color, Logger, TextStyle } from './logger'
 import { YamlData } from './types'
-import { TelegramInlineQueryResult } from 'puregram/lib/telegram-interfaces'
+
+interface GenerateMessageParams {
+  track: Record<string, any>
+  linkArtists?: boolean
+  isLiked?: boolean
+  scrobbled?: number
+}
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN as string
 const IDS = (process.env.TELEGRAM_CHANNEL_IDS as string).split(',').map(Number)
@@ -25,6 +34,10 @@ const spotify = new Spotify({
   refreshToken: process.env.SPOTIFY_REFRESH_TOKEN as string,
   clientId: process.env.SPOTIFY_CLIENT_ID as string,
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET as string
+})
+
+const lastfm = new Lastfm({
+  key: process.env.LASTFM_API_KEY as string
 })
 
 const DATA_YML_PATH = resolve(__dirname, '..', 'data', 'data.yml')
@@ -78,13 +91,19 @@ const write = async (data: YamlData) => {
   await writeFile(DATA_YML_PATH, yaml)
 }
 
-const generateMessage = (track: Record<string, any>, linkArtists = false, isLiked = false) => {
+const generateMessage = (params: GenerateMessageParams) => {
+  const { track, linkArtists, isLiked } = params
+
   const lines = [
     `🎵 ${transformArtists(track.artists, linkArtists)} — [${track.name}](${track.external_urls.spotify}) ${isLiked ? '❤️' : ''}`
   ]
 
   if (!isSingle(track.album)) {
     lines.push(`📀 *${deferAlbumTypeName(track.album)}*: [${track.album.name}](${track.album.external_urls.spotify})`)
+  }
+
+  if (params.scrobbled !== undefined) {
+    lines.push(`🔢 Я слушал этот трек \`${params.scrobbled}\` раз`)
   }
 
   lines.push(`🎧 [Трек на других площадках](https://song.link/s/${track.id})`)
@@ -140,7 +159,23 @@ cron.schedule('*/10 * * * * *', async () => {
 
   const likedData = await getLikedData([track.id])
 
-  const message = generateMessage(track, true, likedData[track.id])
+  const scrobblesData = await lastfm.call('track.getInfo', {
+    artist: transformArtists(track.artists),
+    track: track.name,
+    username: 'starkowdev'
+  })
+
+  const params: GenerateMessageParams = {
+    track,
+    linkArtists: true,
+    isLiked: likedData[track.id]
+  }
+
+  if (scrobblesData.error === undefined) {
+    params.scrobbled = +scrobblesData.track.playcount
+  }
+
+  const message = generateMessage(params)
   const keyboard = getKeyboard(track)
 
   for (const channel of channels) {
@@ -187,7 +222,7 @@ telegram.updates.on('channel_post', async (context) => {
 
     const track = data === null ? recent.items[0].track : data.item
 
-    const message = generateMessage(track, true)
+    const message = generateMessage({ track, linkArtists: true })
     const keyboard = getKeyboard(track)
 
     const params = {
@@ -265,7 +300,7 @@ telegram.updates.on('inline_query', async (context) => {
       title: `▶️ ${track.name} ${liked ? '❤️' : ''}`,
       description,
       url: track.external_urls.spotify,
-      caption: '🎧 *Сейчас я слушаю*\n' + generateMessage(track, true, liked),
+      caption: '🎧 *Сейчас я слушаю*\n' + generateMessage({ track, linkArtists: true, isLiked: liked }),
       parse_mode: 'markdown',
       disable_web_page_preview: true,
       // @ts-expect-error puregram
@@ -297,7 +332,7 @@ telegram.updates.on('inline_query', async (context) => {
       title: `${track.name} ${liked ? '❤️' : ''}`,
       description,
       url: track.external_urls.spotify,
-      caption: generateMessage(track, true, liked),
+      caption: generateMessage({ track, linkArtists: true, isLiked: liked }),
       parse_mode: 'markdown',
       disable_web_page_preview: true,
       // @ts-expect-error puregram
