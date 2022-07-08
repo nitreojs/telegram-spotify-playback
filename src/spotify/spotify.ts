@@ -27,14 +27,15 @@ interface CallParams {
 export class Spotify {
   public baseApiUrl = 'https://api.spotify.com/v1'
 
-  constructor(private options: SpotifyOptions) { }
+  // eslint-disable-next-line no-useless-constructor
+  constructor (private options: SpotifyOptions) { }
 
-  public async revoke() {
-    const json = await this._call({
+  public async revoke () {
+    const json = (await this._call({
       url: 'https://accounts.spotify.com/api/token',
       forceUrl: true,
       headers: {
-        'Authorization': `Basic ${Buffer.from(`${this.options.clientId}:${this.options.clientSecret}`).toString('base64')}`,
+        Authorization: `Basic ${Buffer.from(`${this.options.clientId}:${this.options.clientSecret}`).toString('base64')}`,
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       method: 'POST',
@@ -42,18 +43,18 @@ export class Spotify {
         grant_type: 'refresh_token',
         refresh_token: this.options.refreshToken
       }
-    })
+    })) as Record<string, any>
 
-    this.options.accessToken = json!.access_token
+    this.options.accessToken = json.access_token
   }
 
-  private async _call(params: _CallParams): Promise<Record<string, any> | null> {
+  private async _call (params: _CallParams): Promise<Record<string, any> | null> {
     const { url: rawUrl, method = 'GET', headers: rawHeaders, forceUrl = false, body } = params
 
     const url = forceUrl ? rawUrl : `${this.baseApiUrl}/${rawUrl}`
 
     const headers = rawHeaders ?? {
-      'Authorization': `Bearer ${this.options.accessToken}`
+      Authorization: `Bearer ${this.options.accessToken}`
     }
 
     const requestParams: RequestInit = { method, headers }
@@ -81,9 +82,9 @@ export class Spotify {
     }
   }
 
-  public async call(method: string, params: CallParams = {}) {
+  public async call (method: string, params: CallParams = {}) {
     const { headers, ...body } = params
-    
+
     return this._call({
       url: method,
       method: params.httpMethod ?? 'GET',

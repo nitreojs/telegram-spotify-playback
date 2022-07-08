@@ -7,21 +7,21 @@ import { stringify } from 'qs'
 
 const app = express()
 
-app.get('/login', (req, res, next) => {
+app.get('/login', (req, res) => {
   const state = randomBytes(16).toString('hex')
 
-  return res.redirect('https://accounts.spotify.com/authorize?' + 
+  return res.redirect('https://accounts.spotify.com/authorize?' +
     stringify({
       response_type: 'code',
-      client_id: process.env.SPOTIFY_CLIENT_ID!,
-      redirect_uri: process.env.SPOTIFY_REDIRECT_URI!,
+      client_id: process.env.SPOTIFY_CLIENT_ID as string,
+      redirect_uri: process.env.SPOTIFY_REDIRECT_URI as string,
       state,
       scope: 'user-read-currently-playing user-read-playback-state user-read-recently-played'
     })
   )
 })
 
-app.use('/spotify', async (req, res, next) => {
+app.use('/spotify', async (req, res) => {
   const { code, state = null } = req.query
 
   if (state === null) {
@@ -36,12 +36,12 @@ app.use('/spotify', async (req, res, next) => {
     method: 'POST',
     headers: {
       authorization: `Basic ${Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
-      "content-type": 'application/x-www-form-urlencoded'
+      'content-type': 'application/x-www-form-urlencoded'
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
-      code: code! as string,
-      redirect_uri: process.env.SPOTIFY_REDIRECT_URI!
+      code: code as string,
+      redirect_uri: process.env.SPOTIFY_REDIRECT_URI as string
     })
   })
 

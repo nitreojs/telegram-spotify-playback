@@ -4,7 +4,6 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import { InlineKeyboard, Telegram } from 'puregram'
-import { stripIndents } from 'common-tags'
 
 import * as YAML from 'yaml'
 import cron from 'node-cron'
@@ -14,6 +13,7 @@ import { isEP, isSingle, render } from './renderer'
 import { Spotify } from './spotify'
 import { Color, Logger, TextStyle } from './logger'
 import { YamlData } from './types'
+import { TelegramInlineQueryResult } from 'puregram/lib/telegram-interfaces'
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN as string
 const IDS = (process.env.TELEGRAM_CHANNEL_IDS as string).split(',').map(Number)
@@ -21,15 +21,15 @@ const IDS = (process.env.TELEGRAM_CHANNEL_IDS as string).split(',').map(Number)
 const telegram = Telegram.fromToken(TOKEN)
 
 const spotify = new Spotify({
-  accessToken: process.env.SPOTIFY_ACCESS_TOKEN!,
-  refreshToken: process.env.SPOTIFY_REFRESH_TOKEN!,
-  clientId: process.env.SPOTIFY_CLIENT_ID!,
-  clientSecret: process.env.SPOTIFY_CLIENT_SECRET!
+  accessToken: process.env.SPOTIFY_ACCESS_TOKEN as string,
+  refreshToken: process.env.SPOTIFY_REFRESH_TOKEN as string,
+  clientId: process.env.SPOTIFY_CLIENT_ID as string,
+  clientSecret: process.env.SPOTIFY_CLIENT_SECRET as string
 })
 
 const DATA_YML_PATH = resolve(__dirname, '..', 'data', 'data.yml')
 
-const transformArtists = (artists: Record<string, any>[], linkArtists: boolean = false) => (
+const transformArtists = (artists: Record<string, any>[], linkArtists = false) => (
   artists.map(
     (artist: Record<string, any>) => linkArtists ? `[${artist.name}](${artist.external_urls.spotify})` : artist.name
   ).join(', ')
@@ -39,11 +39,25 @@ const deferAlbumTypeName = (album: Record<string, any>) => (
   isEP(album) ? 'EP' : 'Альбом'
 )
 
+const pad = (n: any) => String(n).padStart(2, '0')
+
+const transformTime = (date: Date) => {
+  const day = date.getDate()
+  const monthN = date.getMonth() + 1
+
+  const hours = date.getHours()
+  const minutes = date.getMinutes()
+
+  const month = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'][monthN]
+
+  return `${day} ${month} в ${pad(hours)}:${pad(minutes)}`
+}
+
 const getKeyboard = (track: Record<string, any>) => {
   const buttons = [
     InlineKeyboard.urlButton({
       text: `${transformArtists(track.artists)} — ${track.name}`,
-      url: `https://odesli.com/${track.external_urls.spotify}`
+      url: `https://song.link/s/${track.id}`
     })
   ]
 
@@ -64,16 +78,23 @@ const write = async (data: YamlData) => {
   await writeFile(DATA_YML_PATH, yaml)
 }
 
-const generateMessage = (track: Record<string, any>, linkArtists: boolean = false) => (
-  stripIndents`
-    🎵 ${transformArtists(track.artists, linkArtists)} — [${track.name}](${track.external_urls.spotify})
-    ${!isSingle(track.album) ? `📀 ${deferAlbumTypeName(track.album)}: [${track.album.name}](${track.album.external_urls.spotify})` : ''}
-  `
-)
+const generateMessage = (track: Record<string, any>, linkArtists = false) => {
+  const lines = [
+    `🎵 ${transformArtists(track.artists, linkArtists)} — [${track.name}](${track.external_urls.spotify})`
+  ]
+
+  if (!isSingle(track.album)) {
+    lines.push(`📀 *${deferAlbumTypeName(track.album)}*: [${track.album.name}](${track.album.external_urls.spotify})`)
+  }
+
+  lines.push(`🎧 [Трек на других площадках](https://song.link/s/${track.id})`)
+
+  return lines.join('\n')
+}
 
 let loggedFailure = false
 
-/// generating every 10 seconds
+// INFO: generating every 10 seconds
 cron.schedule('*/10 * * * * *', async () => {
   const yaml = await load()
 
@@ -94,9 +115,13 @@ cron.schedule('*/10 * * * * *', async () => {
     spotify.call('me/player/recently-played')
   ])
 
-  const buffer = await render(data, recent!)
+  if (recent === null) {
+    throw new Error('recent is null')
+  }
 
-  const track = data === null ? recent!.items[0].track : data.item
+  const buffer = await render(data, recent)
+
+  const track = data === null ? recent.items[0].track : data.item
 
   const message = generateMessage(track, true)
   const keyboard = getKeyboard(track)
@@ -105,16 +130,17 @@ cron.schedule('*/10 * * * * *', async () => {
     await telegram.api.editMessageMedia({
       chat_id: channel.id,
       message_id: channel.message_id,
-  
+
       media: {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         media: buffer,
         type: 'photo',
         caption: message,
         parse_mode: 'markdown'
       },
-  
-      reply_markup: keyboard,
+
+      reply_markup: keyboard
     })
   }
 })
@@ -128,17 +154,21 @@ telegram.updates.on('channel_post', async (context) => {
     return
   }
 
-  if (/^\/create$/i.test(context.text!)) {
+  if (/^\/create$/i.test(context.text as string)) {
     await context.deleteMessage()
-    
+
     const [data, recent] = await Promise.all([
       spotify.call('me/player/currently-playing'),
       spotify.call('me/player/recently-played')
     ])
 
-    const buffer = await render(data, recent!)
+    if (recent === null) {
+      throw new Error('recent is null')
+    }
 
-    const track = data === null ? recent!.items[0].track : data.item
+    const buffer = await render(data, recent)
+
+    const track = data === null ? recent.items[0].track : data.item
 
     const message = generateMessage(track, true)
     const keyboard = getKeyboard(track)
@@ -162,10 +192,93 @@ telegram.updates.on('channel_post', async (context) => {
   }
 })
 
-async function main() {
-  /// telegram
+telegram.updates.on('inline_query', async (context) => {
+  const [data, recent] = await Promise.all([
+    spotify.call('me/player/currently-playing'),
+    spotify.call('me/player/recently-played')
+  ])
+
+  if (recent === null) {
+    return
+  }
+
+  const isCurrentlyListening = data !== null
+
+  const result: TelegramInlineQueryResult[] = []
+
+  result.push({
+    type: 'article',
+    id: 'title',
+    title: 'ИСТОРИЯ ПРОСЛУШИВАНИЯ',
+    input_message_content: {
+      message_text: 'Я нажал на кнопку "ИСТОРИЯ ПРОСЛУШИВАНИЯ". Извините, *я дурачок*',
+      parse_mode: 'markdown'
+    }
+  })
+
+  if (isCurrentlyListening) {
+    const track = data.item
+    const album = track.album
+
+    const description = !isSingle(album)
+      ? `${transformArtists(track.artists)} • ${album.name}`
+      : `${transformArtists(track.artists)}`
+
+    result.push({
+      type: 'photo',
+      id: track.id as string,
+      photo_url: album.images[0].url,
+      thumb_url: album.images[0].url,
+      title: `▶️ ${track.name}`,
+      description,
+      url: track.external_urls.spotify,
+      caption: generateMessage(track, true),
+      parse_mode: 'markdown',
+      disable_web_page_preview: true,
+      // @ts-expect-error puregram
+      reply_markup: getKeyboard(track)
+    })
+  }
+
+  for (let i = 0; i < 10; i++) {
+    const item = recent.items[i]
+
+    // eslint-disable-next-line camelcase
+    const { track, played_at } = item
+    const album = track.album
+
+    const playedAtUTC = new Date(played_at)
+    const playedAt = new Date(playedAtUTC.getTime() + 1000 * 60 * 60 * 3)
+
+    const description = !isSingle(album)
+      ? `${transformArtists(track.artists)} • ${album.name} // слушал ${transformTime(playedAt)}`
+      : `${transformArtists(track.artists)} // слушал ${transformTime(playedAt)}`
+
+    result.push({
+      type: 'photo',
+      id: `${track.id}:${i}`,
+      photo_url: album.images[0].url,
+      thumb_url: album.images[0].url,
+      title: track.name,
+      description,
+      url: track.external_urls.spotify,
+      caption: generateMessage(track, true),
+      parse_mode: 'markdown',
+      disable_web_page_preview: true,
+      // @ts-expect-error puregram
+      reply_markup: getKeyboard(track)
+    })
+  }
+
+  return context.answerInlineQuery(result, {
+    cache_time: 5,
+    is_personal: true
+  })
+})
+
+async function main () {
   await telegram.updates.startPolling()
-  Logger.create('bot', Color.Cyan)(Logger.color('@' + telegram.bot.username!, TextStyle.Underline, Color.Blue), 'started!')
+  Logger.create('bot', Color.Cyan)(Logger.color('@' + telegram.bot.username, TextStyle.Underline, Color.Blue), 'started!')
 }
 
 main().catch((error) => Logger.create('bot', Color.Red).error(error))

@@ -7,10 +7,10 @@ import { loadImage, Canvas, FontLibrary, Image } from 'skia-canvas'
 import { Spotify } from './spotify'
 
 const spotify = new Spotify({
-  accessToken: process.env.SPOTIFY_ACCESS_TOKEN!,
-  refreshToken: process.env.SPOTIFY_REFRESH_TOKEN!,
-  clientId: process.env.SPOTIFY_CLIENT_ID!,
-  clientSecret: process.env.SPOTIFY_CLIENT_SECRET!
+  accessToken: process.env.SPOTIFY_ACCESS_TOKEN as string,
+  refreshToken: process.env.SPOTIFY_REFRESH_TOKEN as string,
+  clientId: process.env.SPOTIFY_CLIENT_ID as string,
+  clientSecret: process.env.SPOTIFY_CLIENT_SECRET as string
 })
 
 FontLibrary.use('SF UI', [path.resolve(__dirname, '..', 'fonts', 'SF UI', '*.otf')])
@@ -58,32 +58,32 @@ export const isSingle = (album: Record<string, any>) => {
 
 let me: Record<string, any>
 
-export async function render(data: Record<string, any> | null, recent: Record<string, any>) {
+export async function render (data: Record<string, any> | null, recent: Record<string, any>) {
   const canvas = new Canvas(1024, 240)
   const context = canvas.getContext('2d')
 
-  const roundRect = (dx: number, dy: number, dw: number, dh: number, radius: number, fill: boolean = false) => {
+  const roundRect = (dx: number, dy: number, dw: number, dh: number, radius: number, fill = false) => {
     if (dw < 2 * radius) radius = dw / 2
     if (dh < 2 * radius) radius = dh / 2
 
     context.beginPath()
     context.moveTo(dx + radius, dy)
-    
-    context.arcTo(dx + dw, dy,      dx + dw, dy + dh, radius)
-    context.arcTo(dx + dw, dy + dh, dx,      dy + dh, radius)
-    context.arcTo(dx,      dy + dh, dx,      dy,      radius)
-    context.arcTo(dx,      dy,      dx + dw, dy,      radius)
-    
+
+    context.arcTo(dx + dw, dy, dx + dw, dy + dh, radius)
+    context.arcTo(dx + dw, dy + dh, dx, dy + dh, radius)
+    context.arcTo(dx, dy + dh, dx, dy, radius)
+    context.arcTo(dx, dy, dx + dw, dy, radius)
+
     if (fill) {
       context.fill()
     }
-    
+
     context.closePath()
 
     return context
   }
 
-  const drawRoundImage = (image: Image, dx: number, dy: number, dw: number, dh: number, radius: number = 10) => {
+  const drawRoundImage = (image: Image, dx: number, dy: number, dw: number, dh: number, radius = 10) => {
     const previousFillStyle = context.fillStyle
 
     context.fillStyle = 'black'
@@ -98,7 +98,7 @@ export async function render(data: Record<string, any> | null, recent: Record<st
     context.fillStyle = previousFillStyle
   }
 
-  const circle = (dx: number, dy: number, radius: number, fill: boolean = false) => {
+  const circle = (dx: number, dy: number, radius: number, fill = false) => {
     context.beginPath()
 
     context.arc(dx, dy, radius, 0, 2 * Math.PI)
@@ -111,6 +111,7 @@ export async function render(data: Record<string, any> | null, recent: Record<st
   }
 
   if (data === null) {
+    // eslint-disable-next-line camelcase
     const { track, played_at } = recent.items[0]
     const album = track.album
 
@@ -121,10 +122,10 @@ export async function render(data: Record<string, any> | null, recent: Record<st
 
     context.filter = 'blur(20px)'
     context.drawImage(thumbnail,
-      0 - LEFT_OFFSET * 2,                         // dx
-      0 - thumbnail.height / 2 / 2 - LEFT_OFFSET,  // dy: 160px up (we need a lot bigger background image)
-      canvas.width + LEFT_OFFSET * 4,              // dw: canvas.width, compensating LEFT_OFFSET
-      thumbnail.height + LEFT_OFFSET * 4           // dh: same applies to here
+      0 - LEFT_OFFSET * 2, // dx
+      0 - thumbnail.height / 2 / 2 - LEFT_OFFSET, // dy: 160px up (we need a lot bigger background image)
+      canvas.width + LEFT_OFFSET * 4, // dw: canvas.width, compensating LEFT_OFFSET
+      thumbnail.height + LEFT_OFFSET * 4 // dh: same applies to here
     )
     context.filter = 'none'
 
@@ -165,11 +166,11 @@ export async function render(data: Record<string, any> | null, recent: Record<st
     context.shadowColor = 'rgba(0, 0, 0, 0.5)'
 
     drawRoundImage(thumbnail,
-      THUMBNAIL_OFFSET_X,  // dx
-      THUMBNAIL_OFFSET_Y,  // dy
-      THUMBNAIL_WIDTH,     // dw: we need an image that fits out [320320] zone
-      THUMBNAIL_HEIGHT,    // dh: same applies to here
-      10                   // radius
+      THUMBNAIL_OFFSET_X, // dx
+      THUMBNAIL_OFFSET_Y, // dy
+      THUMBNAIL_WIDTH, // dw: we need an image that fits out [320320] zone
+      THUMBNAIL_HEIGHT, // dh: same applies to here
+      10 // radius
     )
 
     context.shadowBlur = 0
@@ -216,13 +217,13 @@ export async function render(data: Record<string, any> | null, recent: Record<st
   }
 
   if (me === undefined) {
-    me = (await spotify.call('me'))!
+    me = (await spotify.call('me')) as Record<string, any>
   }
 
   const track = data.item
   const album = track.album
 
-  const AVATAR = me!.images[0].url
+  const AVATAR = me.images[0].url
 
   const thumbnail = await loadImage(album.images[0].url)
   const avatar = await loadImage(AVATAR)
@@ -232,10 +233,10 @@ export async function render(data: Record<string, any> | null, recent: Record<st
 
   context.filter = 'blur(20px)'
   context.drawImage(thumbnail,
-    0 - LEFT_OFFSET * 2,                         // dx
-    0 - thumbnail.height / 2 / 2 - LEFT_OFFSET,  // dy: 160px up (we need a lot bigger background image)
-    canvas.width + LEFT_OFFSET * 4,              // dw: canvas.width, compensating LEFT_OFFSET
-    thumbnail.height + LEFT_OFFSET * 4           // dh: same applies to here
+    0 - LEFT_OFFSET * 2, // dx
+    0 - thumbnail.height / 2 / 2 - LEFT_OFFSET, // dy: 160px up (we need a lot bigger background image)
+    canvas.width + LEFT_OFFSET * 4, // dw: canvas.width, compensating LEFT_OFFSET
+    thumbnail.height + LEFT_OFFSET * 4 // dh: same applies to here
   )
   context.filter = 'none'
 
@@ -253,11 +254,11 @@ export async function render(data: Record<string, any> | null, recent: Record<st
   context.shadowColor = 'rgba(0, 0, 0, 0.5)'
 
   drawRoundImage(thumbnail,
-    THUMBNAIL_OFFSET,  // dx
-    THUMBNAIL_OFFSET,  // dy
-    THUMBNAIL_WIDTH,   // dw: we need an image that fits out [320,320] zone
-    THUMBNAIL_HEIGHT,  // dh: same applies to here
-    10                 // radius
+    THUMBNAIL_OFFSET, // dx
+    THUMBNAIL_OFFSET, // dy
+    THUMBNAIL_WIDTH, // dw: we need an image that fits out [320,320] zone
+    THUMBNAIL_HEIGHT, // dh: same applies to here
+    10 // radius
   )
 
   context.shadowBlur = 0
@@ -281,7 +282,7 @@ export async function render(data: Record<string, any> | null, recent: Record<st
   context.shadowBlur = 0
 
   /// spotify nickname
-  const NICKNAME = me!.display_name
+  const NICKNAME = me.display_name
 
   const NICKNAME_OFFSET = AVATAR_OFFSET - 30 / 2
 
@@ -317,7 +318,7 @@ export async function render(data: Record<string, any> | null, recent: Record<st
 
   context.shadowBlur = 10
   context.font = '300 24px SF UI'
-  
+
   const paanMeasure = context.measureText(PERFORMERS_AND_ALBUM_NAME)
   context.fillText(PERFORMERS_AND_ALBUM_NAME, TRACK_NAME_OFFSET, TRACK_PERFORMERS_OFFSET)
 
@@ -342,8 +343,8 @@ export async function render(data: Record<string, any> | null, recent: Record<st
 
   /// track line
   const LINE_OFFSET = canvas.height - 30 - 5
-  
-  const LINE_WIDTH = canvas.width - TRACK_NAME_OFFSET - 30  
+
+  const LINE_WIDTH = canvas.width - TRACK_NAME_OFFSET - 30
   const LINE_HEIGHT = 5
 
   const progress = data.progress_ms
@@ -351,7 +352,7 @@ export async function render(data: Record<string, any> | null, recent: Record<st
 
   const PLAYED_LINE_WIDTH = (progress / duration) * LINE_WIDTH
 
-  //// left line
+  /// / left line
   context.shadowBlur = 10
   context.fillStyle = 'rgba(255, 255, 255, 0.6)'
 
@@ -359,7 +360,7 @@ export async function render(data: Record<string, any> | null, recent: Record<st
 
   context.fillStyle = 'white'
 
-  //// played line
+  /// / played line
   context.shadowBlur = 0
   context.shadowColor = 'rgba(0, 0, 0, 0.5)'
 
@@ -389,7 +390,6 @@ export async function render(data: Record<string, any> | null, recent: Record<st
 
   context.textAlign = 'right'
   context.fillText(LEFT_TIME, LEFT_TIME_OFFSET, ELAPSED_TIME_OFFSET)
-  
 
   const buffer = await canvas.toBuffer('png')
 

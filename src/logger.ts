@@ -71,7 +71,7 @@ const isPlainObject = (value: any): value is Record<any, any> => value?.construc
 
 export class Logger {
   /** Colorize given `data` with given `colors` */
-  public static color(text: string, ...colors: AnyColor[]): string {
+  public static color (text: string, ...colors: AnyColor[]): string {
     const startCodes = colors
     const endCodes = []
 
@@ -83,7 +83,7 @@ export class Logger {
     /** Text style */
     if (startCodes.some(value => value >= TextStyle.Bold && value <= TextStyle.Strikethrough)) {
       const codes = startCodes.filter(value => value >= TextStyle.Bold && value <= TextStyle.Strikethrough)
-      
+
       for (const code of codes) {
         endCodes.push(code + 20 + (code === TextStyle.Bold ? 1 : 0))
       }
@@ -94,30 +94,30 @@ export class Logger {
       endCodes.push(Color.End)
     }
 
-    let start = startCodes.map(code => `\x1b[${code}m`).join('')
-    let end = endCodes.map(code => `\x1b[${code}m`).join('')
+    const start = startCodes.map(code => `\x1b[${code}m`).join('')
+    const end = endCodes.map(code => `\x1b[${code}m`).join('')
 
     return start + text + end
   }
 
   /** Update last log line */
-  public static updateLog(text: string, params?: LogUpdateParams): void {
+  public static updateLog (text: string, params?: LogUpdateParams): void {
     process.stdout.cursorTo(0)
 
     if (params?.clearLastLine ?? true) {
       process.stdout.moveCursor(0, -1)
     }
-  
+
     process.stdout.write(text + '\n')
   }
 
   /** Generate current logger prefix */
-  public static prefix(name: string, ...colors: AnyColor[]): string {
+  public static prefix (name: string, ...colors: AnyColor[]): string {
     return Logger.color(name, ...colors, TextStyle.Bold)
   }
 
   /** Initialize logger function */
-  public static create(name: string, ...colors: AnyColor[]): LogFunction {
+  public static create (name: string, ...colors: AnyColor[]): LogFunction {
     const prefix = Logger.prefix(name, ...colors)
 
     const fn = (...data: any[]) => console.log(prefix, ...data)
