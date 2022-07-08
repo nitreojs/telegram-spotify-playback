@@ -194,7 +194,7 @@ cron.schedule('*/10 * * * * *', async () => {
   const keyboard = getKeyboard(track)
 
   for (const channel of channels) {
-    await telegram.api.editMessageMedia({
+    const result = await telegram.api.editMessageMedia({
       chat_id: channel.id,
       message_id: channel.message_id,
 
@@ -209,6 +209,8 @@ cron.schedule('*/10 * * * * *', async () => {
 
       reply_markup: keyboard
     })
+
+    console.log(result)
   }
 })
 
