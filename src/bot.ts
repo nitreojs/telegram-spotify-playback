@@ -78,9 +78,9 @@ const write = async (data: YamlData) => {
   await writeFile(DATA_YML_PATH, yaml)
 }
 
-const generateMessage = (track: Record<string, any>, linkArtists = false) => {
+const generateMessage = (track: Record<string, any>, linkArtists = false, isLiked = false) => {
   const lines = [
-    `🎵 ${transformArtists(track.artists, linkArtists)} — [${track.name}](${track.external_urls.spotify})`
+    `🎵 ${transformArtists(track.artists, linkArtists)} — [${track.name}](${track.external_urls.spotify}) ${isLiked ? '❤️' : ''}`
   ]
 
   if (!isSingle(track.album)) {
@@ -90,6 +90,21 @@ const generateMessage = (track: Record<string, any>, linkArtists = false) => {
   lines.push(`🎧 [Трек на других площадках](https://song.link/s/${track.id})`)
 
   return lines.join('\n')
+}
+
+const getLikedData = async (ids: string[]) => {
+  const check = (await spotify.call(`me/tracks/contains?ids=${ids.join(',')}`)) as boolean[]
+
+  const isLikedData: Record<string, boolean> = {}
+
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i]
+    const isLiked = check[i]
+
+    isLikedData[id] = isLiked
+  }
+
+  return isLikedData
 }
 
 let loggedFailure = false
@@ -123,7 +138,9 @@ cron.schedule('*/10 * * * * *', async () => {
 
   const track = data === null ? recent.items[0].track : data.item
 
-  const message = generateMessage(track, true)
+  const likedData = await getLikedData([track.id])
+
+  const message = generateMessage(track, true, likedData[track.id])
   const keyboard = getKeyboard(track)
 
   for (const channel of channels) {
@@ -206,6 +223,20 @@ telegram.updates.on('inline_query', async (context) => {
 
   const result: TelegramInlineQueryResult[] = []
 
+  const ids: string[] = []
+
+  if (data !== null) {
+    ids.push(data.item.id)
+  }
+
+  for (const item of recent.items) {
+    if (!ids.includes(item.track.id)) {
+      ids.push(item.track.id)
+    }
+  }
+
+  const likedData = await getLikedData(ids)
+
   result.push({
     type: 'article',
     id: 'title',
@@ -224,15 +255,17 @@ telegram.updates.on('inline_query', async (context) => {
       ? `${transformArtists(track.artists)} • ${album.name}`
       : `${transformArtists(track.artists)}`
 
+    const liked = likedData[track.id]
+
     result.push({
       type: 'photo',
       id: track.id as string,
       photo_url: album.images[0].url,
       thumb_url: album.images[0].url,
-      title: `▶️ ${track.name}`,
+      title: `▶️ ${track.name} ${liked ? '❤️' : ''}`,
       description,
       url: track.external_urls.spotify,
-      caption: generateMessage(track, true),
+      caption: '🎧 *Сейчас я слушаю*\n' + generateMessage(track, true, liked),
       parse_mode: 'markdown',
       disable_web_page_preview: true,
       // @ts-expect-error puregram
@@ -254,15 +287,17 @@ telegram.updates.on('inline_query', async (context) => {
       ? `${transformArtists(track.artists)} • ${album.name} // слушал ${transformTime(playedAt)}`
       : `${transformArtists(track.artists)} // слушал ${transformTime(playedAt)}`
 
+    const liked = likedData[track.id]
+
     result.push({
       type: 'photo',
       id: `${track.id}:${i}`,
       photo_url: album.images[0].url,
       thumb_url: album.images[0].url,
-      title: track.name,
+      title: `${track.name} ${liked ? '❤️' : ''}`,
       description,
       url: track.external_urls.spotify,
-      caption: generateMessage(track, true),
+      caption: generateMessage(track, true, liked),
       parse_mode: 'markdown',
       disable_web_page_preview: true,
       // @ts-expect-error puregram

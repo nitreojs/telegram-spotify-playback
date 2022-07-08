@@ -16,7 +16,7 @@ app.get('/login', (req, res) => {
       client_id: process.env.SPOTIFY_CLIENT_ID as string,
       redirect_uri: process.env.SPOTIFY_REDIRECT_URI as string,
       state,
-      scope: 'user-read-currently-playing user-read-playback-state user-read-recently-played'
+      scope: 'user-read-currently-playing user-read-playback-state user-read-recently-played user-library-read'
     })
   )
 })
