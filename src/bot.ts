@@ -171,6 +171,8 @@ cron.schedule('*/10 * * * * *', async () => {
     isLiked: likedData[track.id]
   }
 
+  console.log(scrobblesData)
+
   if (scrobblesData.error === undefined) {
     params.scrobbled = +scrobblesData.track.playcount
   }
