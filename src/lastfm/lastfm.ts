@@ -40,6 +40,8 @@ export class Lastfm {
 
     const json = await response.json() as Record<string, any>
 
+    console.log('lastfm json', json)
+
     return json
   }
 }
