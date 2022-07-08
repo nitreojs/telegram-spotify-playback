@@ -43,10 +43,8 @@ const lastfm = new Lastfm({
 const DATA_YML_PATH = resolve(__dirname, '..', 'data', 'data.yml')
 
 const getDeclination = (n: number, forms: [string, string, string]) => {
-  const pr = Intl.PluralRules('ru-RU')
+  const pr = new Intl.PluralRules('ru-RU')
   const rule = pr.select(n)
-
-  console.log({ pr, rule })
 
   if (rule === 'one') {
     return forms[0]
@@ -192,21 +190,10 @@ cron.schedule('*/10 * * * * *', async () => {
     params.scrobbled = +scrobblesData.track.userplaycount
   }
 
-  console.log(1)
-
   const message = generateMessage(params)
-
-  console.log(2)
-
   const keyboard = getKeyboard(track)
 
-  console.log(3)
-
-  console.log(message, keyboard)
-
   for (const channel of channels) {
-    console.log(channel)
-
     await telegram.api.editMessageMedia({
       chat_id: channel.id,
       message_id: channel.message_id,
@@ -222,8 +209,6 @@ cron.schedule('*/10 * * * * *', async () => {
 
       reply_markup: keyboard
     })
-
-    console.log('channel sent')
   }
 })
 
