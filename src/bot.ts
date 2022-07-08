@@ -46,6 +46,8 @@ const getDeclination = (n: number, forms: [string, string, string]) => {
   const pr = Intl.PluralRules('ru-RU')
   const rule = pr.select(n)
 
+  console.log({ pr, rule })
+
   if (rule === 'one') {
     return forms[0]
   }
