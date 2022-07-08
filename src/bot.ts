@@ -42,6 +42,21 @@ const lastfm = new Lastfm({
 
 const DATA_YML_PATH = resolve(__dirname, '..', 'data', 'data.yml')
 
+const getDeclination = (n: number, forms: [string, string, string]) => {
+  const pr = Intl.PluralRules('ru-RU')
+  const rule = pr.select(n)
+
+  if (rule === 'one') {
+    return forms[0]
+  }
+
+  if (rule === 'two') {
+    return forms[1]
+  }
+
+  return forms[2]
+}
+
 const transformArtists = (artists: Record<string, any>[], linkArtists = false) => (
   artists.map(
     (artist: Record<string, any>) => linkArtists ? `[${artist.name}](${artist.external_urls.spotify})` : artist.name
@@ -103,7 +118,7 @@ const generateMessage = (params: GenerateMessageParams) => {
   }
 
   if (params.scrobbled !== undefined) {
-    lines.push(`🔢 Я слушал этот трек \`${params.scrobbled}\` раз`)
+    lines.push(`🔢 Я слушал этот трек \`${params.scrobbled}\` ${getDeclination(params.scrobbled, ['раз', 'раза', 'раз'])}`)
   }
 
   lines.push(`🎧 [Трек на других площадках](https://song.link/s/${track.id})`)
@@ -172,7 +187,7 @@ cron.schedule('*/10 * * * * *', async () => {
   }
 
   if (scrobblesData.error === undefined) {
-    params.scrobbled = +scrobblesData.track.playcount
+    params.scrobbled = +scrobblesData.track.userplaycount
   }
 
   const message = generateMessage(params)
