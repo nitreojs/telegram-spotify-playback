@@ -32,15 +32,10 @@ export class Lastfm {
 
     const url = `${this.baseApiUrl}/?${new URLSearchParams(body)}`
 
-    console.log('lastfm:before:response')
+    console.log(url)
 
     const response = await fetch(url, { method: 'GET' })
-
-    console.log('lastfm:after:response')
-
     const json = await response.json() as Record<string, any>
-
-    console.log('lastfm json', json)
 
     return json
   }
