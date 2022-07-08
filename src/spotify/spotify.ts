@@ -68,6 +68,8 @@ export class Spotify {
     try {
       const json = await response.json() as Record<string, any>
 
+      console.log(json)
+
       if (json.error?.status === 401) { // need to revoke the token
         await this.revoke()
 
@@ -76,7 +78,7 @@ export class Spotify {
 
       return json
     } catch (error) { // failed to .json()
-      // console.log(error)
+      console.log(error)
 
       return null
     }
