@@ -174,11 +174,15 @@ cron.schedule('*/10 * * * * *', async () => {
 
   const likedData = await getLikedData([track.id])
 
+  console.log('before track.getInfo')
+
   const scrobblesData = await lastfm.call('track.getInfo', {
     artist: transformArtists(track.artists),
     track: track.name,
     username: 'starkowdev'
   })
+
+  console.log('before track.getInfo')
 
   const params: GenerateMessageParams = {
     track,
@@ -192,8 +196,6 @@ cron.schedule('*/10 * * * * *', async () => {
 
   const message = generateMessage(params)
   const keyboard = getKeyboard(track)
-
-  console.log(message, channels)
 
   for (const channel of channels) {
     await telegram.api.editMessageMedia({
