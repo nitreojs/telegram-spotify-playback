@@ -26,11 +26,9 @@ export const transformTime = (ms: number) => {
 
 const pad = (data: any) => data.toString().padStart(2, '0')
 
-export const transformDate = (source: string) => {
-  const date = new Date(source)
-
-  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} в ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-}
+export const transformDate = (date: Date) => (
+  `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} в ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+)
 
 export const deferAlbumType = (album: Record<string, any>) => {
   if (isAlbum(album)) {
@@ -114,6 +112,9 @@ export async function render (data: Record<string, any> | null, recent: Record<s
     // eslint-disable-next-line camelcase
     const { track, played_at } = recent.items[0]
     const album = track.album
+
+    const playedAtUTC = new Date(played_at)
+    const playedAt = new Date(playedAtUTC.getTime() + 1000 * 60 * 60 * 3)
 
     const thumbnail = await loadImage(album.images[0].url)
 
@@ -209,7 +210,7 @@ export async function render (data: Record<string, any> | null, recent: Record<s
     context.fillText('слушал', LAST_LISTENED_OFFSET_X, LAST_LISTENED_OFFSET_Y)
 
     context.font = '500 24px SF UI'
-    context.fillText(transformDate(played_at), LAST_LISTENED_OFFSET_X + measure.width + 10, LAST_LISTENED_OFFSET_Y)
+    context.fillText(transformDate(playedAt), LAST_LISTENED_OFFSET_X + measure.width + 10, LAST_LISTENED_OFFSET_Y)
 
     const buffer = await canvas.toBuffer('png')
 
