@@ -76,8 +76,6 @@ export class Spotify {
 
       return json
     } catch (error) { // failed to .json()
-      console.error(error)
-
       return null
     }
   }
