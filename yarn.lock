@@ -67,6 +67,11 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@starkow/logger@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@starkow/logger/-/logger-1.0.1.tgz#d9a25224920565829314a5304a2a69799ac8b01e"
+  integrity sha512-hWQbZ4krgzfRENRviqB4ej2nAaEIgNmx1C+5s0Pq3wQrPnp8oImdL7vO7n5P+IKMLasmsKFMRWT2B9L8payKLQ==
+
 "@types/body-parser@*":
   version "1.19.2"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.19.2.tgz#aea2059e28b7658639081347ac4fab3de166e6f0"

@@ -9,12 +9,13 @@ import { TelegramInlineQueryResult } from 'puregram/lib/telegram-interfaces'
 import * as YAML from 'yaml'
 import cron from 'node-cron'
 
+import { Color, Logger, TextStyle } from '@starkow/logger'
+
 import { isEP, isSingle, render } from './renderer'
 
 import { Spotify } from './spotify'
 import { Lastfm } from './lastfm'
 
-import { Color, Logger, TextStyle } from './logger'
 import { YamlData } from './types'
 
 interface GenerateMessageParams {
