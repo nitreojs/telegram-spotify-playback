@@ -19,6 +19,7 @@ import { Spotify } from '../spotify'
 import * as SpotifyTypes from '../spotify/types'
 
 import { Lastfm } from '../lastfm'
+import * as LastfmTypes from '../lastfm/types'
 
 import { YamlData } from '../types'
 
@@ -141,18 +142,18 @@ cron.schedule('*/10 * * * * *', async () => {
 
   const likedData = await getLikedData([track.id])
 
-  const currentScrobblingTrackResponse = await lastfm.call('user.getrecenttracks', {
+  const currentScrobblingTrackData = await lastfm.call('user.getRecentTracks', {
     user: process.env.LASTFM_USERNAME,
     limit: 1
-  })
+  }) as LastfmTypes.RecentTracks
 
-  const currentScrobblingTrack = currentScrobblingTrackResponse.recenttracks.track[0]
+  const currentScrobblingTrack = currentScrobblingTrackData.recenttracks.track[0]
 
   const scrobblesData = await lastfm.call('track.getInfo', {
     artist: currentScrobblingTrack.artist['#text'],
     track: currentScrobblingTrack.name,
     username: process.env.LASTFM_USERNAME
-  })
+  }) as LastfmTypes.TrackInfo
 
   const params: GenerateMessageParams = {
     track,
@@ -193,7 +194,7 @@ telegram.updates.on('channel_post', async (context, next) => {
   }
 
   if (/^\/create$/i.test(context.text as string)) {
-    await context.deleteMessage()
+    await context.delete()
 
     const [data, recent] = await Promise.all([
       spotify.call('me/player/currently-playing'),
