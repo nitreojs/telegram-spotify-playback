@@ -19,7 +19,7 @@ FontLibrary.use('SF UI', [path.resolve(__dirname, '..', 'fonts', 'SF UI', '*.otf
 
 let me: Record<string, any>
 
-export async function render (data: Record<string, any> | null, recent: Record<string, any>) {
+export const render = async (data: Record<string, any> | null, recent: Record<string, any>) => {
   const canvas = new Canvas(1024, 240)
   const context = canvas.getContext('2d')
 
