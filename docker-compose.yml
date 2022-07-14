@@ -2,6 +2,7 @@ version: '3'
 
 services:
   spotify-bot:
+    image: starkow/telegram-spotify-playback
     build: .
     env_file:
       - .env
