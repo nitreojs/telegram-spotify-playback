@@ -4,8 +4,9 @@
   "description": "Spotify Telegram bot",
   "main": "dist/bot",
   "scripts": {
-    "start:bot": "ts-node src/bot",
-    "start:server": "ts-node src/server",
+    "start:dev:bot": "ts-node src/bot",
+    "start:dev:server": "ts-node src/server",
+    "start": "node /dist/bot",
     "build": "tsc -p tsconfig.json"
   },
   "author": "starkow",
