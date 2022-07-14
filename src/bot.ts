@@ -11,7 +11,7 @@ import cron from 'node-cron'
 
 import { Color, Logger, TextStyle } from '@starkow/logger'
 
-import { isEP, isSingle, transformArtists } from './utils'
+import { getDeclination, isEP, isSingle, transformArtists, transformDate } from './utils'
 import { render } from './renderer'
 
 import { Spotify } from './spotify'
@@ -26,9 +26,7 @@ interface GenerateMessageParams {
   scrobbled?: number
 }
 
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN
-
-const telegram = Telegram.fromToken(TOKEN)
+const telegram = Telegram.fromToken(process.env.TELEGRAM_BOT_TOKEN)
 
 const spotify = new Spotify({
   accessToken: process.env.SPOTIFY_ACCESS_TOKEN,
@@ -43,38 +41,9 @@ const lastfm = new Lastfm({
 
 const DATA_YML_PATH = resolve(__dirname, '..', 'data', 'data.yml')
 
-const getDeclination = (n: number, forms: [string, string, string]) => {
-  const pr = new Intl.PluralRules('ru-RU')
-  const rule = pr.select(n)
-
-  if (rule === 'one') {
-    return forms[0]
-  }
-
-  if (rule === 'few') {
-    return forms[1]
-  }
-
-  return forms[2]
-}
-
 const deferAlbumTypeName = (album: Record<string, any>) => (
   isEP(album) ? 'EP' : 'Альбом'
 )
-
-const pad = (n: any) => String(n).padStart(2, '0')
-
-const transformTime = (date: Date) => {
-  const day = date.getDate()
-  const monthN = date.getMonth() + 1
-
-  const hours = date.getHours()
-  const minutes = date.getMinutes()
-
-  const month = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'][monthN]
-
-  return `${day} ${month} в ${pad(hours)}:${pad(minutes)}`
-}
 
 const getKeyboard = (track: Record<string, any>) => {
   const buttons = [
@@ -212,10 +181,10 @@ cron.schedule('*/10 * * * * *', async () => {
   }
 })
 
-/**  */
-telegram.updates.on('channel_post', async (context) => {
+/** Post was made in a channel, maybe containing /create command */
+telegram.updates.on('channel_post', async (context, next) => {
   if (!context.hasText) {
-    return
+    return next()
   }
 
   if (/^\/create$/i.test(context.text as string)) {
@@ -254,6 +223,8 @@ telegram.updates.on('channel_post', async (context) => {
 
     await write({ channels })
   }
+
+  return next()
 })
 
 /** @<usernamebot> was typed in a text field */
@@ -332,8 +303,8 @@ telegram.updates.on('inline_query', async (context) => {
     const playedAt = new Date(playedAtUTC.getTime() + 1000 * 60 * 60 * 3)
 
     const description = !isSingle(album)
-      ? `${transformArtists(track.artists)} • ${album.name} // слушал ${transformTime(playedAt)}`
-      : `${transformArtists(track.artists)} // слушал ${transformTime(playedAt)}`
+      ? `${transformArtists(track.artists)} • ${album.name} // слушал ${transformDate(playedAt)}`
+      : `${transformArtists(track.artists)} // слушал ${transformDate(playedAt)}`
 
     const liked = likedData[track.id]
 

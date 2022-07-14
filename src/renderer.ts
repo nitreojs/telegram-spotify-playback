@@ -5,7 +5,7 @@ import 'dotenv/config'
 import { loadImage, Canvas, FontLibrary, Image } from 'skia-canvas'
 
 import { Spotify } from './spotify'
-import { deferAlbumType, isSingle, transformDate, transformTime } from './utils'
+import { deferAlbumType, isSingle, transformFullDate, transformTime } from './utils'
 
 const spotify = new Spotify({
   accessToken: process.env.SPOTIFY_ACCESS_TOKEN,
@@ -172,7 +172,7 @@ export async function render (data: Record<string, any> | null, recent: Record<s
     context.fillText('слушал', LAST_LISTENED_OFFSET_X, LAST_LISTENED_OFFSET_Y)
 
     context.font = '500 24px SF UI'
-    context.fillText(transformDate(playedAt), LAST_LISTENED_OFFSET_X + measure.width + 10, LAST_LISTENED_OFFSET_Y)
+    context.fillText(transformFullDate(playedAt), LAST_LISTENED_OFFSET_X + measure.width + 10, LAST_LISTENED_OFFSET_Y)
 
     const buffer = await canvas.toBuffer('png')
 

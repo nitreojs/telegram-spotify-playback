@@ -19,9 +19,21 @@ export const transformTime = (ms: number) => {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
-const pad = (data: any) => data.toString().padStart(2, '0')
+export const transformDate = (date: Date) => {
+  const day = date.getDate()
+  const monthN = date.getMonth() + 1
 
-export const transformDate = (date: Date) => (
+  const hours = date.getHours()
+  const minutes = date.getMinutes()
+
+  const month = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'][monthN]
+
+  return `${day} ${month} в ${pad(hours)}:${pad(minutes)}`
+}
+
+export const pad = (data: any) => data.toString().padStart(2, '0')
+
+export const transformFullDate = (date: Date) => (
   `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} в ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
 )
 
@@ -42,3 +54,18 @@ export const transformArtists = (artists: Record<string, any>[], linkArtists = f
     (artist: Record<string, any>) => linkArtists ? `[${artist.name}](${artist.external_urls.spotify})` : artist.name
   ).join(', ')
 )
+
+export const getDeclination = (n: number, forms: [string, string, string]) => {
+  const pr = new Intl.PluralRules('ru-RU')
+  const rule = pr.select(n)
+
+  if (rule === 'one') {
+    return forms[0]
+  }
+
+  if (rule === 'few') {
+    return forms[1]
+  }
+
+  return forms[2]
+}
