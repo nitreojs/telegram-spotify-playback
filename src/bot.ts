@@ -11,7 +11,7 @@ import cron from 'node-cron'
 
 import { Color, Logger, TextStyle } from '@starkow/logger'
 
-import { isEP, isSingle } from './utils'
+import { isEP, isSingle, transformArtists } from './utils'
 import { render } from './renderer'
 
 import { Spotify } from './spotify'
@@ -27,7 +27,6 @@ interface GenerateMessageParams {
 }
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN
-const IDS = (process.env.TELEGRAM_CHANNEL_IDS).split(',').map(Number)
 
 const telegram = Telegram.fromToken(TOKEN)
 
@@ -59,12 +58,6 @@ const getDeclination = (n: number, forms: [string, string, string]) => {
   return forms[2]
 }
 
-const transformArtists = (artists: Record<string, any>[], linkArtists = false) => (
-  artists.map(
-    (artist: Record<string, any>) => linkArtists ? `[${artist.name}](${artist.external_urls.spotify})` : artist.name
-  ).join(', ')
-)
-
 const deferAlbumTypeName = (album: Record<string, any>) => (
   isEP(album) ? 'EP' : 'Альбом'
 )
@@ -94,12 +87,14 @@ const getKeyboard = (track: Record<string, any>) => {
   return InlineKeyboard.keyboard(buttons)
 }
 
+/** Loads data from data/data.yml */
 const load = async () => {
   const data = await readFile(DATA_YML_PATH, { encoding: 'utf8' })
 
   return YAML.parse(data) as YamlData
 }
 
+/** Writes data to data/data.yml */
 const write = async (data: YamlData) => {
   const yaml = YAML.stringify(data)
 
@@ -108,6 +103,7 @@ const write = async (data: YamlData) => {
   await writeFile(DATA_YML_PATH, yaml)
 }
 
+/** Generates message that will be shown in a post or after clicking on an inline query */
 const generateMessage = (params: GenerateMessageParams) => {
   const { track, linkArtists, isLiked } = params
 
@@ -128,6 +124,7 @@ const generateMessage = (params: GenerateMessageParams) => {
   return lines.join('\n')
 }
 
+/** Generates `{ [track-id: number]: boolean }` object containing whether `track-id` is liked or not */
 const getLikedData = async (ids: string[]) => {
   const check = (await spotify.call(`me/tracks/contains?ids=${ids.join(',')}`)) as boolean[]
 
@@ -143,8 +140,6 @@ const getLikedData = async (ids: string[]) => {
   return isLikedData
 }
 
-let loggedFailure = false
-
 // INFO: generating every 10 seconds
 cron.schedule('*/10 * * * * *', async () => {
   const yaml = await load()
@@ -152,11 +147,7 @@ cron.schedule('*/10 * * * * *', async () => {
   const { channels } = yaml
 
   if (channels === null) {
-    if (!loggedFailure) {
-      Logger.create('yaml is lacking of data!')(yaml)
-
-      loggedFailure = true
-    }
+    Logger.create('yaml is lacking of data!')(yaml)
 
     return
   }
@@ -221,11 +212,8 @@ cron.schedule('*/10 * * * * *', async () => {
   }
 })
 
+/**  */
 telegram.updates.on('channel_post', async (context) => {
-  if (!IDS.includes(context.chatId as number)) {
-    return
-  }
-
   if (!context.hasText) {
     return
   }
@@ -268,6 +256,7 @@ telegram.updates.on('channel_post', async (context) => {
   }
 })
 
+/** @<usernamebot> was typed in a text field */
 telegram.updates.on('inline_query', async (context) => {
   const [data, recent] = await Promise.all([
     spotify.call('me/player/currently-playing'),

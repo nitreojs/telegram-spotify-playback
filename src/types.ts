@@ -9,7 +9,6 @@ declare global {
       SPOTIFY_REDIRECT_URI: string
 
       TELEGRAM_BOT_TOKEN: string
-      TELEGRAM_CHANNEL_IDS: string // TODO: deprecate
 
       LASTFM_API_KEY: string
     }

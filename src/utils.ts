@@ -36,3 +36,9 @@ export const deferAlbumType = (album: Record<string, any>) => {
 
   return 'Single'
 }
+
+export const transformArtists = (artists: Record<string, any>[], linkArtists = false) => (
+  artists.map(
+    (artist: Record<string, any>) => linkArtists ? `[${artist.name}](${artist.external_urls.spotify})` : artist.name
+  ).join(', ')
+)
