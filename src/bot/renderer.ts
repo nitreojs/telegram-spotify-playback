@@ -7,6 +7,7 @@ import { loadImage, Canvas, FontLibrary, Image } from 'skia-canvas'
 import { Spotify } from '../spotify'
 
 import { deferAlbumType, isSingle, transformFullDate, transformTime } from '../utils'
+import * as SpotifyTypes from '../spotify/types'
 
 const spotify = new Spotify({
   accessToken: process.env.SPOTIFY_ACCESS_TOKEN,
@@ -17,7 +18,7 @@ const spotify = new Spotify({
 
 FontLibrary.use('SF UI', [path.resolve(__dirname, '..', 'fonts', 'SF UI', '*.otf')])
 
-let me: Record<string, any>
+let me: SpotifyTypes.PrivateUser
 
 export const render = async (data: Record<string, any> | null, recent: Record<string, any>) => {
   const canvas = new Canvas(1024, 240)
@@ -181,7 +182,7 @@ export const render = async (data: Record<string, any> | null, recent: Record<st
   }
 
   if (me === undefined) {
-    me = (await spotify.call('me')) as Record<string, any>
+    me = await spotify.call('me') as SpotifyTypes.PrivateUser
   }
 
   const track = data.item

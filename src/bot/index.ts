@@ -16,12 +16,14 @@ import { render } from './renderer'
 import { getDeclination, isEP, isSingle, transformArtists, transformDate } from '../utils'
 
 import { Spotify } from '../spotify'
+import * as SpotifyTypes from '../spotify/types'
+
 import { Lastfm } from '../lastfm'
 
 import { YamlData } from '../types'
 
 interface GenerateMessageParams {
-  track: Record<string, any>
+  track: SpotifyTypes.Track
   linkArtists?: boolean
   isLiked?: boolean
   scrobbled?: number
@@ -96,7 +98,9 @@ const generateMessage = (params: GenerateMessageParams) => {
 
 /** Generates `{ [track-id: number]: boolean }` object containing whether `track-id` is liked or not */
 const getLikedData = async (ids: string[]) => {
-  const check = (await spotify.call(`me/tracks/contains?ids=${ids.join(',')}`)) as boolean[]
+  const url = `me/tracks/contains?ids=${ids.join(',')}`
+
+  const check = await spotify.call(url) as boolean[]
 
   const isLikedData: Record<string, boolean> = {}
 
@@ -125,7 +129,7 @@ cron.schedule('*/10 * * * * *', async () => {
   const [data, recent] = await Promise.all([
     spotify.call('me/player/currently-playing'),
     spotify.call('me/player/recently-played')
-  ])
+  ]) as [SpotifyTypes.CurrentlyPlaying, SpotifyTypes.RecentlyPlayed]
 
   if (recent === null) {
     throw new Error('recent is null')
@@ -133,7 +137,7 @@ cron.schedule('*/10 * * * * *', async () => {
 
   const buffer = await render(data, recent)
 
-  const track = data === null ? recent.items[0].track : data.item
+  const track = data?.item as SpotifyTypes.Track ?? recent.items[0].track
 
   const likedData = await getLikedData([track.id])
 
@@ -194,7 +198,7 @@ telegram.updates.on('channel_post', async (context, next) => {
     const [data, recent] = await Promise.all([
       spotify.call('me/player/currently-playing'),
       spotify.call('me/player/recently-played')
-    ])
+    ]) as [SpotifyTypes.CurrentlyPlaying, SpotifyTypes.RecentlyPlayed]
 
     if (recent === null) {
       throw new Error('recent is null')
@@ -202,7 +206,7 @@ telegram.updates.on('channel_post', async (context, next) => {
 
     const buffer = await render(data, recent)
 
-    const track = data === null ? recent.items[0].track : data.item
+    const track = data?.item as SpotifyTypes.Track ?? recent.items[0].track
 
     const message = generateMessage({ track, linkArtists: true })
     const keyboard = getKeyboard(track)
@@ -233,7 +237,7 @@ telegram.updates.on('inline_query', async (context) => {
   const [data, recent] = await Promise.all([
     spotify.call('me/player/currently-playing'),
     spotify.call('me/player/recently-played')
-  ])
+  ]) as [SpotifyTypes.CurrentlyPlaying, SpotifyTypes.RecentlyPlayed]
 
   if (recent === null) {
     return
@@ -245,7 +249,7 @@ telegram.updates.on('inline_query', async (context) => {
 
   const ids: string[] = []
 
-  if (data !== null) {
+  if (data !== null && data.item !== null) {
     ids.push(data.item.id)
   }
 
@@ -268,7 +272,7 @@ telegram.updates.on('inline_query', async (context) => {
   })
 
   if (isCurrentlyListening) {
-    const track = data.item
+    const track = data.item as SpotifyTypes.Track
     const album = track.album
 
     const description = !isSingle(album)
