@@ -4,8 +4,9 @@ import 'dotenv/config'
 
 import { loadImage, Canvas, FontLibrary, Image } from 'skia-canvas'
 
-import { Spotify } from './spotify'
-import { deferAlbumType, isSingle, transformFullDate, transformTime } from './utils'
+import { Spotify } from '../spotify'
+
+import { deferAlbumType, isSingle, transformFullDate, transformTime } from '../utils'
 
 const spotify = new Spotify({
   accessToken: process.env.SPOTIFY_ACCESS_TOKEN,

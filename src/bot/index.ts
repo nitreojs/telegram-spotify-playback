@@ -11,13 +11,13 @@ import cron from 'node-cron'
 
 import { Color, Logger, TextStyle } from '@starkow/logger'
 
-import { getDeclination, isEP, isSingle, transformArtists, transformDate } from './utils'
+import { getDeclination, isEP, isSingle, transformArtists, transformDate } from '../utils'
 import { render } from './renderer'
 
-import { Spotify } from './spotify'
-import { Lastfm } from './lastfm'
+import { Spotify } from '../spotify'
+import { Lastfm } from '../lastfm'
 
-import { YamlData } from './types'
+import { YamlData } from '../types'
 
 interface GenerateMessageParams {
   track: Record<string, any>
