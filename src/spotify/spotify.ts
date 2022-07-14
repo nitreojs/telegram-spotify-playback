@@ -48,7 +48,7 @@ export class Spotify {
     this.options.accessToken = json.access_token
   }
 
-  private async _call (params: _CallParams): Promise<Record<string, any> | null> {
+  private async _call<T extends Record<string, any> = Record<string, any>> (params: _CallParams): Promise<T | null> {
     const { url: rawUrl, method = 'GET', headers: rawHeaders, forceUrl = false, body } = params
 
     const url = forceUrl ? rawUrl : `${this.baseApiUrl}/${rawUrl}`
@@ -66,9 +66,9 @@ export class Spotify {
     const response = await fetch(url, requestParams)
 
     try {
-      const json = await response.json() as Record<string, any>
+      const json = await response.json() as T
 
-      if (json.error?.status === 401) { // need to revoke the token
+      if (json?.error?.status === 401) { // need to revoke the token
         await this.revoke()
 
         return this._call(params)
@@ -80,10 +80,10 @@ export class Spotify {
     }
   }
 
-  public async call (method: string, params: CallParams = {}) {
+  public async call<T = Record<string, any>> (method: string, params: CallParams = {}) {
     const { headers, ...body } = params
 
-    return this._call({
+    return this._call<T>({
       url: method,
       method: params.httpMethod ?? 'GET',
       body,

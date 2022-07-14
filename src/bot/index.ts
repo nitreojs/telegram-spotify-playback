@@ -101,7 +101,11 @@ const generateMessage = (params: GenerateMessageParams) => {
 const getLikedData = async (ids: string[]) => {
   const url = `me/tracks/contains?ids=${ids.join(',')}`
 
-  const check = await spotify.call(url) as boolean[]
+  const check = await spotify.call<boolean[]>(url)
+
+  if (check === null) {
+    return {}
+  }
 
   const isLikedData: Record<string, boolean> = {}
 
@@ -128,9 +132,9 @@ cron.schedule('*/10 * * * * *', async () => {
   }
 
   const [data, recent] = await Promise.all([
-    spotify.call('me/player/currently-playing'),
-    spotify.call('me/player/recently-played')
-  ]) as [SpotifyTypes.CurrentlyPlaying, SpotifyTypes.RecentlyPlayed]
+    spotify.call<SpotifyTypes.CurrentlyPlaying>('me/player/currently-playing'),
+    spotify.call<SpotifyTypes.RecentlyPlayed>('me/player/recently-played')
+  ])
 
   if (recent === null) {
     throw new Error('recent is null')
@@ -142,18 +146,18 @@ cron.schedule('*/10 * * * * *', async () => {
 
   const likedData = await getLikedData([track.id])
 
-  const currentScrobblingTrackData = await lastfm.call('user.getRecentTracks', {
+  const currentScrobblingTrackData = await lastfm.call<LastfmTypes.RecentTracks>('user.getRecentTracks', {
     user: process.env.LASTFM_USERNAME,
     limit: 1
-  }) as LastfmTypes.RecentTracks
+  })
 
   const currentScrobblingTrack = currentScrobblingTrackData.recenttracks.track[0]
 
-  const scrobblesData = await lastfm.call('track.getInfo', {
+  const scrobblesData = await lastfm.call<LastfmTypes.TrackInfo>('track.getInfo', {
     artist: currentScrobblingTrack.artist['#text'],
     track: currentScrobblingTrack.name,
     username: process.env.LASTFM_USERNAME
-  }) as LastfmTypes.TrackInfo
+  })
 
   const params: GenerateMessageParams = {
     track,
@@ -197,9 +201,9 @@ telegram.updates.on('channel_post', async (context, next) => {
     await context.delete()
 
     const [data, recent] = await Promise.all([
-      spotify.call('me/player/currently-playing'),
-      spotify.call('me/player/recently-played')
-    ]) as [SpotifyTypes.CurrentlyPlaying, SpotifyTypes.RecentlyPlayed]
+      spotify.call<SpotifyTypes.CurrentlyPlaying>('me/player/currently-playing'),
+      spotify.call<SpotifyTypes.RecentlyPlayed>('me/player/recently-played')
+    ])
 
     if (recent === null) {
       throw new Error('recent is null')
@@ -236,15 +240,13 @@ telegram.updates.on('channel_post', async (context, next) => {
 /** @<usernamebot> was typed in a text field */
 telegram.updates.on('inline_query', async (context) => {
   const [data, recent] = await Promise.all([
-    spotify.call('me/player/currently-playing'),
-    spotify.call('me/player/recently-played')
-  ]) as [SpotifyTypes.CurrentlyPlaying, SpotifyTypes.RecentlyPlayed]
+    spotify.call<SpotifyTypes.CurrentlyPlaying>('me/player/currently-playing'),
+    spotify.call<SpotifyTypes.RecentlyPlayed>('me/player/recently-played')
+  ])
 
   if (recent === null) {
     return
   }
-
-  const isCurrentlyListening = data !== null
 
   const result: TelegramInlineQueryResult[] = []
 
@@ -272,7 +274,7 @@ telegram.updates.on('inline_query', async (context) => {
     }
   })
 
-  if (isCurrentlyListening) {
+  if (data !== null) {
     const track = data.item as SpotifyTypes.Track
     const album = track.album
 

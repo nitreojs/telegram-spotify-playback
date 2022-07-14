@@ -16,11 +16,11 @@ export class Lastfm {
   // eslint-disable-next-line no-useless-constructor
   constructor (private options: LastfmOptions) { }
 
-  public async call (method: string, params?: Record<string, any>) {
-    return this._call({ method, ...params })
+  public async call<T = Record<string, any>> (method: string, params?: Record<string, any>) {
+    return this._call<T>({ method, ...params })
   }
 
-  private async _call (params: _CallParams) {
+  private async _call<T = Record<string, any>> (params: _CallParams) {
     const { method, ...rawBody } = params
 
     const body = {
@@ -33,7 +33,7 @@ export class Lastfm {
     const url = `${this.baseApiUrl}/?${new URLSearchParams(body)}`
 
     const response = await fetch(url, { method: 'GET' })
-    const json = await response.json() as Record<string, any>
+    const json = await response.json() as T
 
     return json
   }
