@@ -26,20 +26,20 @@ interface GenerateMessageParams {
   scrobbled?: number
 }
 
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN as string
-const IDS = (process.env.TELEGRAM_CHANNEL_IDS as string).split(',').map(Number)
+const TOKEN = process.env.TELEGRAM_BOT_TOKEN
+const IDS = (process.env.TELEGRAM_CHANNEL_IDS).split(',').map(Number)
 
 const telegram = Telegram.fromToken(TOKEN)
 
 const spotify = new Spotify({
-  accessToken: process.env.SPOTIFY_ACCESS_TOKEN as string,
-  refreshToken: process.env.SPOTIFY_REFRESH_TOKEN as string,
-  clientId: process.env.SPOTIFY_CLIENT_ID as string,
-  clientSecret: process.env.SPOTIFY_CLIENT_SECRET as string
+  accessToken: process.env.SPOTIFY_ACCESS_TOKEN,
+  refreshToken: process.env.SPOTIFY_REFRESH_TOKEN,
+  clientId: process.env.SPOTIFY_CLIENT_ID,
+  clientSecret: process.env.SPOTIFY_CLIENT_SECRET
 })
 
 const lastfm = new Lastfm({
-  key: process.env.LASTFM_API_KEY as string
+  key: process.env.LASTFM_API_KEY
 })
 
 const DATA_YML_PATH = resolve(__dirname, '..', 'data', 'data.yml')

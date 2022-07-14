@@ -1,5 +1,6 @@
-import { randomBytes } from 'crypto'
 import 'dotenv/config'
+
+import { randomBytes } from 'node:crypto'
 
 import express from 'express'
 import fetch from 'node-fetch'
@@ -13,8 +14,8 @@ app.get('/login', (req, res) => {
   return res.redirect('https://accounts.spotify.com/authorize?' +
     stringify({
       response_type: 'code',
-      client_id: process.env.SPOTIFY_CLIENT_ID as string,
-      redirect_uri: process.env.SPOTIFY_REDIRECT_URI as string,
+      client_id: process.env.SPOTIFY_CLIENT_ID,
+      redirect_uri: process.env.SPOTIFY_REDIRECT_URI,
       state,
       scope: 'user-read-currently-playing user-read-playback-state user-read-recently-played user-library-read'
     })
@@ -41,7 +42,7 @@ app.use('/spotify', async (req, res) => {
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       code: code as string,
-      redirect_uri: process.env.SPOTIFY_REDIRECT_URI as string
+      redirect_uri: process.env.SPOTIFY_REDIRECT_URI
     })
   })
 
