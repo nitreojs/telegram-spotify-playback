@@ -11,7 +11,8 @@ import cron from 'node-cron'
 
 import { Color, Logger, TextStyle } from '@starkow/logger'
 
-import { isEP, isSingle, render } from './renderer'
+import { isEP, isSingle } from './utils'
+import { render } from './renderer'
 
 import { Spotify } from './spotify'
 import { Lastfm } from './lastfm'
