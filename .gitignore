@@ -105,3 +105,6 @@ dist
 
 # macOS fuck you
 .DS_Store
+
+# data.yml file
+data/data.yml
