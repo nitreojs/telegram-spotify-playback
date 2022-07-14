@@ -174,10 +174,17 @@ cron.schedule('*/10 * * * * *', async () => {
 
   const likedData = await getLikedData([track.id])
 
+  const currentScrobblingTrackResponse = await lastfm.call('user.getrecenttracks', {
+    user: process.env.LASTFM_USERNAME,
+    limit: 1
+  })
+
+  const currentScrobblingTrack = currentScrobblingTrackResponse.recenttracks.track[0]
+
   const scrobblesData = await lastfm.call('track.getInfo', {
-    artist: transformArtists(track.artists),
-    track: track.name,
-    username: 'starkowdev'
+    artist: currentScrobblingTrack.artist['#text'],
+    track: currentScrobblingTrack.name,
+    username: process.env.LASTFM_USERNAME
   })
 
   const params: GenerateMessageParams = {
