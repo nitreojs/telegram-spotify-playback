@@ -3,16 +3,17 @@ import 'dotenv/config'
 import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { InlineKeyboard, Telegram } from 'puregram'
-import { TelegramInlineQueryResult } from 'puregram/lib/telegram-interfaces'
+import { InlineKeyboard, MediaSource, Telegram } from 'puregram'
+import { TelegramInlineQueryResult } from 'puregram/generated'
 
 import * as YAML from 'yaml'
 import cron from 'node-cron'
 
 import { Color, Logger, TextStyle } from '@starkow/logger'
 
-import { getDeclination, isEP, isSingle, transformArtists, transformDate } from '../utils'
 import { render } from './renderer'
+
+import { getDeclination, isEP, isSingle, transformArtists, transformDate } from '../utils'
 
 import { Spotify } from '../spotify'
 import { Lastfm } from '../lastfm'
@@ -56,7 +57,7 @@ const getKeyboard = (track: Record<string, any>) => {
   return InlineKeyboard.keyboard(buttons)
 }
 
-/** Loads data from data/data.yml */
+/** Reads data from data/data.yml */
 const load = async () => {
   const data = await readFile(DATA_YML_PATH, { encoding: 'utf8' })
 
@@ -212,7 +213,7 @@ telegram.updates.on('channel_post', async (context, next) => {
       reply_markup: keyboard
     }
 
-    const sentMessage = await context.sendPhoto(buffer, params)
+    const sentMessage = await context.sendPhoto(MediaSource.buffer(buffer), params)
 
     const { channels } = await load()
 
