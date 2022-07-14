@@ -1,8 +1,10 @@
-version: '3.3'
+version: '3'
+
 services:
   spotify-bot:
-    build: ./
+    build: .
     env_file:
       - .env
     volumes:
       - ./data:/spotify-bot/data
+    restart: unless-stopped
