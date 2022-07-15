@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends libfontconfi
 WORKDIR /app
 COPY ["package.json", "yarn.lock", "./"]
 RUN yarn --prod
-COPY fonts fonts
+# COPY fonts fonts – you need to get fonts/ somehow =)
 COPY data data
 COPY --from=build ["/app/dist", "dist"]
 CMD ["yarn", "start"]
