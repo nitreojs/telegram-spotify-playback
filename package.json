@@ -6,7 +6,7 @@
   "scripts": {
     "start:dev:bot": "ts-node src/bot",
     "start:dev:server": "ts-node src/server",
-    "start": "node /dist/bot",
+    "start": "node dist/bot",
     "build": "tsc -p tsconfig.json"
   },
   "author": "starkow",
