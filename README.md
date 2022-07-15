@@ -133,6 +133,11 @@ lastly, fill `LASTFM_USERNAME` as your Last.fm's username =)
 
 **congratulations, setup is done!**
 
+# fonts are missing!
+
+yeah, that's true, i've removed fonts/ from here because i dont wanna get sued or whatever.
+you need to somehow *get* SF UI font and put .otf files of it here: `~/fonts/SF UI/*.otf`
+
 # what do i do now?
 
 simply go to a channel where the bot is an admin and execute `/create` command. **that's it!**
