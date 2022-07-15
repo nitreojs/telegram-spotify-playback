@@ -189,7 +189,7 @@ cron.schedule('*/10 * * * * *', async () => {
       })
     }
   } catch (error) {
-    console.error(error)
+    Logger.create('error!', Color.Red).error(error)
   }
 })
 
@@ -297,7 +297,6 @@ telegram.updates.on('inline_query', async (context) => {
       caption: '🎧 *Сейчас я слушаю*\n' + generateMessage({ track, linkArtists: true, isLiked: liked }),
       parse_mode: 'markdown',
       disable_web_page_preview: true,
-      // @ts-expect-error puregram
       reply_markup: getKeyboard(track)
     })
   }
@@ -329,7 +328,6 @@ telegram.updates.on('inline_query', async (context) => {
       caption: generateMessage({ track, linkArtists: true, isLiked: liked }),
       parse_mode: 'markdown',
       disable_web_page_preview: true,
-      // @ts-expect-error puregram
       reply_markup: getKeyboard(track)
     })
   }
