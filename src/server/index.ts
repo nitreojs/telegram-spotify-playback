@@ -42,7 +42,7 @@ app.use('/spotify', async (req, res) => {
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       code: code as string,
-      redirect_uri: process.env.SPOTIFY_REDIRECT_URI
+      redirect_uri: process.env.SPOTIFY_REDIRECT_URI as string
     })
   })
 
