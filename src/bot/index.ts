@@ -43,7 +43,7 @@ const lastfm = new Lastfm({
   key: process.env.LASTFM_API_KEY
 })
 
-const DATA_YML_PATH = resolve(__dirname, '..', 'data', 'data.yml')
+const DATA_YML_PATH = resolve(__dirname, '..', '..', 'data', 'data.yml')
 
 const deferAlbumTypeName = (album: Record<string, any>) => (
   isEP(album) ? 'EP' : 'Альбом'
