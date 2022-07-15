@@ -16,7 +16,7 @@ const spotify = new Spotify({
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET
 })
 
-FontLibrary.use('SF UI', [path.resolve(__dirname, '..', 'fonts', 'SF UI', '*.otf')])
+FontLibrary.use('SF UI', [path.resolve(__dirname, '..', '..', 'fonts', 'SF UI', '*.otf')])
 
 let me: SpotifyTypes.PrivateUser
 
