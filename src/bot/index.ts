@@ -88,7 +88,7 @@ const generateMessage = (params: GenerateMessageParams) => {
     lines.push(`📀 *${deferAlbumTypeName(track.album)}*: [${track.album.name}](${track.album.external_urls.spotify})`)
   }
 
-  if (params.scrobbled !== undefined) {
+  if (params.scrobbled !== undefined && params.scrobbled > 0) {
     lines.push(`🔢 Я слушал этот трек \`${params.scrobbled}\` ${getDeclination(params.scrobbled, ['раз', 'раза', 'раз'])}`)
   }
 
