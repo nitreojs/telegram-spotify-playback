@@ -132,3 +132,7 @@ insert it in `LASTFM_APIKEY` in `.env` file
 lastly, fill `LASTFM_USERNAME` as your Last.fm's username =)
 
 **congratulations, setup is done!**
+
+# what do i do now?
+
+simply go to a channel where the bot is an admin and execute `/create` command. **that's it!**
