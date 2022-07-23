@@ -120,78 +120,78 @@ const getLikedData = async (ids: string[]) => {
 }
 
 // INFO: generating every 10 seconds
-cron.schedule('*/10 * * * * *', async () => {
-  try {
-    const yaml = await load()
+// cron.schedule('*/10 * * * * *', async () => {
+//   try {
+//     const yaml = await load()
 
-    const { channels } = yaml
+//     const { channels } = yaml
 
-    if (channels === null) {
-      Logger.create('yaml is lacking of data!')(yaml)
+//     if (channels === null) {
+//       Logger.create('yaml is lacking of data!')(yaml)
 
-      return
-    }
+//       return
+//     }
 
-    const [data, recent] = await Promise.all([
-      spotify.call<SpotifyTypes.CurrentlyPlaying>('me/player/currently-playing'),
-      spotify.call<SpotifyTypes.RecentlyPlayed>('me/player/recently-played')
-    ])
+//     const [data, recent] = await Promise.all([
+//       spotify.call<SpotifyTypes.CurrentlyPlaying>('me/player/currently-playing'),
+//       spotify.call<SpotifyTypes.RecentlyPlayed>('me/player/recently-played')
+//     ])
 
-    if (recent === null) {
-      throw new Error('recent is null')
-    }
+//     if (recent === null) {
+//       throw new Error('recent is null')
+//     }
 
-    const buffer = await render(data, recent)
+//     const buffer = await render(data, recent)
 
-    const track = data?.item as SpotifyTypes.Track ?? recent.items[0].track
+//     const track = data?.item as SpotifyTypes.Track ?? recent.items[0].track
 
-    const likedData = await getLikedData([track.id])
+//     const likedData = await getLikedData([track.id])
 
-    const currentScrobblingTrackData = await lastfm.call<LastfmTypes.RecentTracks>('user.getRecentTracks', {
-      user: process.env.LASTFM_USERNAME,
-      limit: 1
-    })
+//     const currentScrobblingTrackData = await lastfm.call<LastfmTypes.RecentTracks>('user.getRecentTracks', {
+//       user: process.env.LASTFM_USERNAME,
+//       limit: 1
+//     })
 
-    const currentScrobblingTrack = currentScrobblingTrackData.recenttracks.track[0]
+//     const currentScrobblingTrack = currentScrobblingTrackData.recenttracks.track[0]
 
-    const scrobblesData = await lastfm.call<LastfmTypes.TrackInfo>('track.getInfo', {
-      artist: currentScrobblingTrack.artist['#text'],
-      track: currentScrobblingTrack.name,
-      username: process.env.LASTFM_USERNAME
-    })
+//     const scrobblesData = await lastfm.call<LastfmTypes.TrackInfo>('track.getInfo', {
+//       artist: currentScrobblingTrack.artist['#text'],
+//       track: currentScrobblingTrack.name,
+//       username: process.env.LASTFM_USERNAME
+//     })
 
-    const params: GenerateMessageParams = {
-      track,
-      linkArtists: true,
-      isLiked: likedData[track.id]
-    }
+//     const params: GenerateMessageParams = {
+//       track,
+//       linkArtists: true,
+//       isLiked: likedData[track.id]
+//     }
 
-    if (scrobblesData.error === undefined) {
-      params.scrobbled = +scrobblesData.track.userplaycount
-    }
+//     if (scrobblesData.error === undefined) {
+//       params.scrobbled = +scrobblesData.track.userplaycount
+//     }
 
-    const message = generateMessage(params)
-    const keyboard = getKeyboard(track)
+//     const message = generateMessage(params)
+//     const keyboard = getKeyboard(track)
 
-    for (const channel of channels) {
-      await telegram.api.editMessageMedia({
-        chat_id: channel.id,
-        message_id: channel.message_id,
+//     for (const channel of channels) {
+//       await telegram.api.editMessageMedia({
+//         chat_id: channel.id,
+//         message_id: channel.message_id,
 
-        media: {
-          media: MediaSource.buffer(buffer),
-          type: 'photo',
-          caption: message,
-          parse_mode: 'markdown'
-        },
+//         media: {
+//           media: MediaSource.buffer(buffer),
+//           type: 'photo',
+//           caption: message,
+//           parse_mode: 'markdown'
+//         },
 
-        reply_markup: keyboard
-      })
-    }
-  } catch (error) {
-    Logger.create('error!', Color.Red).error(error)
-  }
-})
+//         reply_markup: keyboard
+//       })
+//     }
+//   } catch (error) {
+//     Logger.create('error!', Color.Red).error(error)
+//   }
+// })
 
 /** Post was made in a channel, maybe containing /create command */
 telegram.updates.on('channel_post', async (context, next) => {
@@ -266,16 +266,6 @@ telegram.updates.on('inline_query', async (context) => {
 
   const likedData = await getLikedData(ids)
 
-  result.push({
-    type: 'article',
-    id: 'title',
-    title: 'ИСТОРИЯ ПРОСЛУШИВАНИЯ',
-    input_message_content: {
-      message_text: 'Я нажал на кнопку "ИСТОРИЯ ПРОСЛУШИВАНИЯ". Извините, *я дурачок*',
-      parse_mode: 'markdown'
-    }
-  })
-
   if (data !== null) {
     const track = data.item as SpotifyTypes.Track
     const album = track.album
@@ -287,16 +277,18 @@ telegram.updates.on('inline_query', async (context) => {
     const liked = likedData[track.id]
 
     result.push({
-      type: 'photo',
+      type: 'article',
       id: track.id as string,
-      photo_url: album.images[0].url,
+      input_message_content: {
+        message_text: '🎧 *Сейчас я слушаю*\n' + generateMessage({ track, linkArtists: true, isLiked: liked }),
+        parse_mode: 'markdown',
+        disable_web_page_preview: true
+      },
+      hide_url: true, // on Windows
       thumb_url: album.images[0].url,
       title: `▶️ ${track.name} ${liked ? '❤️' : ''}`,
       description,
       url: track.external_urls.spotify,
-      caption: '🎧 *Сейчас я слушаю*\n' + generateMessage({ track, linkArtists: true, isLiked: liked }),
-      parse_mode: 'markdown',
-      disable_web_page_preview: true,
       reply_markup: getKeyboard(track)
     })
   }
@@ -318,27 +310,31 @@ telegram.updates.on('inline_query', async (context) => {
     const liked = likedData[track.id]
 
     result.push({
-      type: 'photo',
+      type: 'article',
       id: `${track.id}:${i}`,
-      photo_url: album.images[0].url,
+      input_message_content: {
+        message_text: generateMessage({ track, linkArtists: true, isLiked: liked }),
+        parse_mode: 'markdown',
+        disable_web_page_preview: true
+      },
+      hide_url: true, // on Windows
       thumb_url: album.images[0].url,
       title: `${track.name} ${liked ? '❤️' : ''}`,
       description,
       url: track.external_urls.spotify,
-      caption: generateMessage({ track, linkArtists: true, isLiked: liked }),
-      parse_mode: 'markdown',
-      disable_web_page_preview: true,
       reply_markup: getKeyboard(track)
     })
   }
 
   return context.answerInlineQuery(result, {
     cache_time: 5,
-    is_personal: true
+    is_personal: true,
+    switch_pm_parameter: 'nigger',
+    switch_pm_text: 'История прослушивания Spotify'
   })
 })
 
-async function main () {
+async function main() {
   await telegram.updates.startPolling()
   Logger.create('bot', Color.Cyan)(Logger.color('@' + telegram.bot.username, TextStyle.Underline, Color.Blue), 'started!')
 }
