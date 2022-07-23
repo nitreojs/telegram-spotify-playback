@@ -120,78 +120,78 @@ const getLikedData = async (ids: string[]) => {
 }
 
 // INFO: generating every 10 seconds
-// cron.schedule('*/10 * * * * *', async () => {
-//   try {
-//     const yaml = await load()
+cron.schedule('*/10 * * * * *', async () => {
+  try {
+    const yaml = await load()
 
-//     const { channels } = yaml
+    const { channels } = yaml
 
-//     if (channels === null) {
-//       Logger.create('yaml is lacking of data!')(yaml)
+    if (channels === null) {
+      Logger.create('yaml is lacking of data!')(yaml)
 
-//       return
-//     }
+      return
+    }
 
-//     const [data, recent] = await Promise.all([
-//       spotify.call<SpotifyTypes.CurrentlyPlaying>('me/player/currently-playing'),
-//       spotify.call<SpotifyTypes.RecentlyPlayed>('me/player/recently-played')
-//     ])
+    const [data, recent] = await Promise.all([
+      spotify.call<SpotifyTypes.CurrentlyPlaying>('me/player/currently-playing'),
+      spotify.call<SpotifyTypes.RecentlyPlayed>('me/player/recently-played')
+    ])
 
-//     if (recent === null) {
-//       throw new Error('recent is null')
-//     }
+    if (recent === null) {
+      throw new Error('recent is null')
+    }
 
-//     const buffer = await render(data, recent)
+    const buffer = await render(data, recent)
 
-//     const track = data?.item as SpotifyTypes.Track ?? recent.items[0].track
+    const track = data?.item as SpotifyTypes.Track ?? recent.items[0].track
 
-//     const likedData = await getLikedData([track.id])
+    const likedData = await getLikedData([track.id])
 
-//     const currentScrobblingTrackData = await lastfm.call<LastfmTypes.RecentTracks>('user.getRecentTracks', {
-//       user: process.env.LASTFM_USERNAME,
-//       limit: 1
-//     })
+    const currentScrobblingTrackData = await lastfm.call<LastfmTypes.RecentTracks>('user.getRecentTracks', {
+      user: process.env.LASTFM_USERNAME,
+      limit: 1
+    })
 
-//     const currentScrobblingTrack = currentScrobblingTrackData.recenttracks.track[0]
+    const currentScrobblingTrack = currentScrobblingTrackData.recenttracks.track[0]
 
-//     const scrobblesData = await lastfm.call<LastfmTypes.TrackInfo>('track.getInfo', {
-//       artist: currentScrobblingTrack.artist['#text'],
-//       track: currentScrobblingTrack.name,
-//       username: process.env.LASTFM_USERNAME
-//     })
+    const scrobblesData = await lastfm.call<LastfmTypes.TrackInfo>('track.getInfo', {
+      artist: currentScrobblingTrack.artist['#text'],
+      track: currentScrobblingTrack.name,
+      username: process.env.LASTFM_USERNAME
+    })
 
-//     const params: GenerateMessageParams = {
-//       track,
-//       linkArtists: true,
-//       isLiked: likedData[track.id]
-//     }
+    const params: GenerateMessageParams = {
+      track,
+      linkArtists: true,
+      isLiked: likedData[track.id]
+    }
 
-//     if (scrobblesData.error === undefined) {
-//       params.scrobbled = +scrobblesData.track.userplaycount
-//     }
+    if (scrobblesData.error === undefined) {
+      params.scrobbled = +scrobblesData.track.userplaycount
+    }
 
-//     const message = generateMessage(params)
-//     const keyboard = getKeyboard(track)
+    const message = generateMessage(params)
+    const keyboard = getKeyboard(track)
 
-//     for (const channel of channels) {
-//       await telegram.api.editMessageMedia({
-//         chat_id: channel.id,
-//         message_id: channel.message_id,
+    for (const channel of channels) {
+      await telegram.api.editMessageMedia({
+        chat_id: channel.id,
+        message_id: channel.message_id,
 
-//         media: {
-//           media: MediaSource.buffer(buffer),
-//           type: 'photo',
-//           caption: message,
-//           parse_mode: 'markdown'
-//         },
+        media: {
+          media: MediaSource.buffer(buffer),
+          type: 'photo',
+          caption: message,
+          parse_mode: 'markdown'
+        },
 
-//         reply_markup: keyboard
-//       })
-//     }
-//   } catch (error) {
-//     Logger.create('error!', Color.Red).error(error)
-//   }
-// })
+        reply_markup: keyboard
+      })
+    }
+  } catch (error) {
+    Logger.create('error!', Color.Red).error(error)
+  }
+})
 
 /** Post was made in a channel, maybe containing /create command */
 telegram.updates.on('channel_post', async (context, next) => {
