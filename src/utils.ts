@@ -21,7 +21,7 @@ export const transformTime = (ms: number) => {
 
 export const transformDate = (date: Date) => {
   const day = date.getDate()
-  const monthN = date.getMonth() + 1
+  const monthN = date.getMonth()
 
   const hours = date.getHours()
   const minutes = date.getMinutes()
