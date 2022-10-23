@@ -1755,10 +1755,10 @@ punycode@^2.1.0:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
 
-puregram@^2.9.4:
-  version "2.9.4"
-  resolved "https://registry.yarnpkg.com/puregram/-/puregram-2.9.4.tgz#0e6c7f864b3c315e4fe48bc1b5bfbf37af7d93cd"
-  integrity sha512-RgzqCA+KvYcdTmF0HcicKcMkvFqBjmRLugjwSvitRsA1oaytwo8hWhftgIsIkuf6iMrFSp/O3Wa9O7dV4/mZBQ==
+puregram@^2.9.5:
+  version "2.9.5"
+  resolved "https://registry.yarnpkg.com/puregram/-/puregram-2.9.5.tgz#4449766548cf7c9d658a60ee206919c4e47e615a"
+  integrity sha512-Ov8yvK306QlJR/p9nlXvjxZAUNpe0B3ol1e58uqFG+APFlkgoBvBMokgZYwClC6VjFgB5k3qVj5nlLwbtQ61Tw==
   dependencies:
     debug "^4.3.2"
     form-data-encoder "^1.7.2"
