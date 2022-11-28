@@ -17,7 +17,7 @@
     "dotenv": "^14.2.0",
     "express": "^4.17.2",
     "node-cron": "^3.0.0",
-    "puregram": "^2.9.5",
+    "puregram": "^2.9.7",
     "skia-canvas": "^0.9.30",
     "undici": "^5.8.0",
     "yaml": "^1.10.2"
