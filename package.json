@@ -20,7 +20,7 @@
     "puregram": "^2.9.7",
     "skia-canvas": "^0.9.30",
     "undici": "^5.8.0",
-    "yaml": "^1.10.2"
+    "yaml": "^2.2.2"
   },
   "devDependencies": {
     "@types/common-tags": "^1.8.1",
